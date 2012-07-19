@@ -49,38 +49,38 @@ endif
 
 # Add inputs and outputs from these tool invocations to the build variables 
 FLASH_IMAGE += \
-aquariumpilot-display.hex \
+aquariumpilot-aquarium.hex \
 
 SIZEDUMMY += \
 sizedummy \
 
 
 # All Target
-all: aquariumpilot-display.elf secondary-outputs
+all: aquariumpilot-aquarium.elf secondary-outputs
 
 # Tool invocations
-aquariumpilot-display.elf: $(OBJS) $(USER_OBJS)
+aquariumpilot-aquarium.elf: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: AVR C++ Linker'
-	avr-g++ -Wl,-Map,aquariumpilot-display.map,--cref -L"/storage/apps/eclipse-avr/workspace/ArduinoCore-1.0/Mega2560" -Xlinker-Wl,--gc-sections -mmcu=atmega2560 -o "aquariumpilot-display.elf" $(OBJS) $(USER_OBJS) $(LIBS)
+	avr-g++ -Wl,-Map,aquariumpilot-aquarium.map,--cref -L"/storage/apps/eclipse-avr/workspace/ArduinoCore-1.0/Mega2560" -Xlinker-Wl,--gc-sections -mmcu=atmega2560 -o "aquariumpilot-aquarium.elf" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
-aquariumpilot-display.hex: aquariumpilot-display.elf
+aquariumpilot-aquarium.hex: aquariumpilot-aquarium.elf
 	@echo 'Create Flash image (ihex format)'
-	-avr-objcopy -R .eeprom -O ihex aquariumpilot-display.elf  "aquariumpilot-display.hex"
+	-avr-objcopy -R .eeprom -O ihex aquariumpilot-aquarium.elf  "aquariumpilot-aquarium.hex"
 	@echo 'Finished building: $@'
 	@echo ' '
 
-sizedummy: aquariumpilot-display.elf
+sizedummy: aquariumpilot-aquarium.elf
 	@echo 'Invoking: Print Size'
-	-avr-size --format=avr --mcu=atmega2560 aquariumpilot-display.elf
+	-avr-size --format=avr --mcu=atmega2560 aquariumpilot-aquarium.elf
 	@echo 'Finished building: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) $(OBJS)$(C_DEPS)$(ELFS)$(FLASH_IMAGE)$(S_DEPS)$(CXX_DEPS)$(S_UPPER_DEPS)$(C++_DEPS)$(ASM_DEPS)$(CC_DEPS)$(CPP_DEPS)$(C_UPPER_DEPS)$(SIZEDUMMY) aquariumpilot-display.elf
+	-$(RM) $(OBJS)$(C_DEPS)$(ELFS)$(FLASH_IMAGE)$(S_DEPS)$(CXX_DEPS)$(S_UPPER_DEPS)$(C++_DEPS)$(ASM_DEPS)$(CC_DEPS)$(CPP_DEPS)$(C_UPPER_DEPS)$(SIZEDUMMY) aquariumpilot-aquarium.elf
 	-@echo ' '
 
 secondary-outputs: $(FLASH_IMAGE) $(SIZEDUMMY)
