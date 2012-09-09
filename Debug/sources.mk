@@ -30,7 +30,11 @@ SIZEDUMMY :=
 # Every subdirectory with source files must be described here
 SUBDIRS := \
 src \
+lib \
+arduinolib/Wire/utility \
+arduinolib/Wire \
 arduinolib/SPI \
 arduinolib/Ethernet/utility \
 arduinolib/Ethernet \
+arduinolib/EEPROM \
 
