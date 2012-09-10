@@ -63,6 +63,7 @@ String dateTimeString;
 bool maintenanceInProgress;
 
 String pH;
+int phLastDayAlarm = -1;
 char serialChar;
 
 /**
@@ -132,7 +133,7 @@ void setup() {
 	// PH
 	Serial3.begin(38400);
 	Serial3.print("C\r");
-	pH.reserve(4);
+	pH.reserve(5);
 }
 
 void debug(String message) {
@@ -152,11 +153,11 @@ void checkPh() {
 	if(maintenanceInProgress) return;
 
 	// Inform the pH stamp of the water temperature (for more accurate readings)
-	Serial3.print(sensors.getTempF(aquariumTemp)+1);
+	Serial3.print(sensors.getTempF(aquariumTemp));
 	Serial3.print("\r");
 
 	// Take one pH reading
-	Serial3.print("R\r");
+	//Serial3.print("R\r");
 
 	pH = "";
 
@@ -168,20 +169,32 @@ void checkPh() {
 
 	   pH += serialChar;
 
+	   #ifdef DEBUG
 	   Serial.print("Reading: ");
 	   Serial.println(serialChar);
+	   #endif
     }
 
     // Put the pH stamp back into continuous mode
     Serial3.print("C\r");
 
     // Apply Offset
+    /*
     char cPh[5];
     pH.toCharArray(cPh, 5);
 
-    float fTemp = atof(cPh) - .35;
-    dtostrf(fTemp, 2, 2, cPh);
+    float fPh = atof(cPh) - .4;
+    dtostrf(fPh, 2, 2, cPh);
     pH = String(cPh);
+    (/
+
+	// Send notification (one per day) if pH is < 8.0
+    /*
+    if(fPh < 8 && phLastDayAlarm != now.day()) {
+
+       sendNotification("Low pH", "The pH is too low. Reading: " + pH);
+       phLastDayAlarm = now.day();
+    }*/
 }
 
 void sendHtmlHeader() {
@@ -190,6 +203,10 @@ void sendHtmlHeader() {
 }
 
 void send404() {
+
+	#ifdef DEBUG
+	debug("send404()");
+	#endif
 
 	httpClient.println("HTTP/1.1 404 Not Found");
 	httpClient.println("Content-Type: text/html");
@@ -201,6 +218,10 @@ void send404() {
 }
 
 void reply(int statusCode, String statusMessage, String body) {
+
+	#ifdef DEBUG
+	debug("reply()");
+	#endif
 
 	httpClient.print("HTTP/1.1 ");
 	httpClient.print(statusCode);
@@ -278,14 +299,24 @@ void factoryReset() {
 	//    EEPROM.write(i, 0);
 }*/
 
+void startNewDay() {
+
+	phLastDayAlarm = -1;
+}
+
 void loop() {
 
-	// Date/Time formatting
+	// Date/Time handling
 	now = RTC.now();
 	dateString = String(now.month()) + "/" + String(now.day()) + "/" + String(now.year());
 	timeString = String(now.hour()) + ":" + String(now.minute()) + ":" + String(now.second());
 	dateTimeString = dateString + " " + timeString;
 
+	if(now.hour() == 0 && now.minute() == 0) {
+		startNewDay();
+	}
+
+	// Start listening for web requests
 	httpClient = httpServer.available();
 
 	char clientline[BUFSIZE];
@@ -378,7 +409,6 @@ void loop() {
 							EEPROM.write(address, atoi(param2));
 						}
 
-						//  return status
 						httpClient.println("HTTP/1.1 200 OK");
 						httpClient.println("Content-Type: text/html");
 						httpClient.println("X-Powered-By: AquariumPilot v1.0");
@@ -429,7 +459,7 @@ void loop() {
 							}
 						}
 
-						//  assemble the json output
+						// assemble the json response
 						jsonOut += "{\"";
 						jsonOut += param1;
 						jsonOut += "\":\"";
@@ -510,7 +540,8 @@ void loop() {
 						jsonOut += "\"aquariumTemp\":\"" + String(aquariumTempF) + "\", ";
 						jsonOut += "\"surfaceTemp\":\"" + String(surfaceTempF) + "\", ";
 						jsonOut += "\"roomTemp\":\"" + String(roomTempF) + "\", ";
-						jsonOut += "\"ph\":\"" + pH + "\", ";
+						jsonOut += "\"pH\":\"" + pH + "\", ";
+						jsonOut += "\"phLastDayAlarm\":\"" + String(phLastDayAlarm) + "\", ";
 						jsonOut += "\"maintenanceInProgress\":\"" + String(maintenanceInProgress) + "\" ";
 					jsonOut += "}";
 				}
